@@ -32,7 +32,7 @@ class Config(object):
     LOG_CHANNEL = int(os.getenv("LOG_CHANNEL", ""))
     RESULTS_COUNT = int(os.getenv("RESULTS_COUNT", 10))
     BROADCAST_AS_COPY = os.getenv("BROADCAST_AS_COPY", "True")
-    UPDATES_CHANNEL_USERNAME = os.getenv("UPDATES_CHANNEL_USERNAME", "")
+    UPDATES_CHANNEL_USERNAME = os.getenv("UPDATES_CHANNEL_USERNAME", "Potterhub")
     FORCE_SUB = os.getenv("FORCE_SUB", "False")
     AUTO_DELETE_TIME = int(os.getenv("AUTO_DELETE_TIME", 300))
     MDISK_API = os.getenv("MDISK_API", "12334")
