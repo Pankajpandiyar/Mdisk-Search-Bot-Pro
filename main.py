@@ -17,6 +17,43 @@ import re
 tbot = TelegramClient('mdisktelethonbot', Config.API_ID, Config.API_HASH).start(bot_token=Config.BOT_TOKEN)
 client = TelegramClient(StringSession( Config.USER_SESSION_STRING), Config.API_ID, Config.API_HASH)
 
+if Config.REPLIT:
+    from threading import Thread
+
+    from flask import Flask, jsonify
+    
+    app = Flask('')
+    
+    @app.route('/')
+    def main():
+        res = {
+            "status":"running",
+            "hosted":"replit.com",
+            "repl":Config.REPLIT,
+        }
+        
+        return jsonify(res)
+
+    def run():
+      app.run(host="0.0.0.0", port=8000)
+    
+    def keep_alive():
+      server = Thread(target=run)
+      server.start()
+
+async def ping_server():
+    sleep_time = Config.PING_INTERVAL
+    while True:
+        await asyncio.sleep(sleep_time)
+        try:
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
+                async with session.get(Config.REPLIT) as resp:
+                    logging.info(f"Pinged server with response: {resp.status}")
+        except TimeoutError:
+            logging.warning("Couldn't connect to the site URL..!")
+        except Exception:
+            traceback.print_exc()
+
 
 async def get_user_join(id):
     if Config.FORCE_SUB == "False":
@@ -62,7 +99,7 @@ async def message_handler(event):
         if not args:
             return
 
-        txt = await event.reply('**Searching For "{}" 🔍**'.format(event.text))
+        txt = await event.reply('**Cooking Results For "{}" 🔍**'.format(event.text))
 
 
 
@@ -106,14 +143,21 @@ async def message_handler(event):
         if c <= 0:
             answer = f'''**No Results Found For {event.text}**
 
-**Type Only Movie Name 💬**
-**Check Spelling On** [Google](http://www.google.com/search?q={event.text.replace(' ', '%20')}%20Movie) 🔍
+**Do Not add Season or Episode💬**
+
+**Do Not add languages or Year💥**
+
+**If Movie Not found Then Request to Admin May Be Its Not Added To Bot🤖**
+
+**If Dont Know How To Watch Movies With Mdisk search Bot Then Click On How To Watch Button📱**
+
+**If You Doesn't Know Spelling Check On** [Google](http://www.google.com/search?q={event.text.replace(' ', '%20')}%20Movie) 🔍
     '''
 
             newbutton = [Button.url('Click To Check Spelling ✅',
                                     f'http://www.google.com/search?q={event.text.replace(" ", "%20")}%20Movie')], [
-                            Button.url('Click To Check Release Date 📅',
-                                    f'http://www.google.com/search?q={event.text.replace(" ", "%20")}%20Movie%20Release%20Date')]
+                            Button.url('How To Watch',
+                                    f'https://t.me/bollywoodmoviereqwatch')]
             await txt.delete()
             result = await event.reply(answer, buttons=newbutton, link_preview=False)
             await asyncio.sleep(Config.AUTO_DELETE_TIME)
@@ -134,8 +178,12 @@ async def message_handler(event):
         )
         message = f'**Click Here 👇 For "{event.text}"**\n\n[🍿🎬 {str(event.text).upper()}\n🍿🎬 {str("Click me for results").upper()}]({tgraph_result})'
 
+        newbutton = [Button.url('Join Updates Channel ✅',
+                                    f'https://t.me/movieshubchannell')]
+
         await txt.delete()
-        result = await event.reply(message, link_preview=False)
+        await asyncio.sleep(0.5)
+        result = await event.reply(message, buttons=newbutton, link_preview=False)
         await asyncio.sleep(Config.AUTO_DELETE_TIME)
         # await event.delete()
         return await result.delete()
@@ -143,7 +191,7 @@ async def message_handler(event):
     except Exception as e:
         print(e)
         await txt.delete()
-        result = await event.reply("Some error occurred while searching for movie")
+        result = await event.reply("Please Search Again...🔍🙏")
         await asyncio.sleep(Config.AUTO_DELETE_TIME)
         await event.delete() 
         return await result.delete()
@@ -155,18 +203,34 @@ async def escape_url(str):
 
 
 # Bot Client for Inline Search
-Bot = Client(
-    session_name=Config.BOT_SESSION_NAME,
-    api_id=Config.API_ID,
-    api_hash=Config.API_HASH,
-    bot_token=Config.BOT_TOKEN,
-    plugins=dict(root="plugins")
-)
+class Bot(Client):
+
+    def __init__(self):
+        super().__init__(
+        Config.BOT_SESSION_NAME,
+        api_id=Config.API_ID,
+        api_hash=Config.API_HASH,
+        bot_token=Config.BOT_TOKEN,
+        plugins=dict(root="plugins")
+        )
+
+    def start(self):
+        if Config.REPLIT:
+            keep_alive()
+            # ping_server()
+        super().start()
+        print('Bot started')
+
+    def stop(self, *args):
+        super().stop()
+        print('Bot Stopped Bye')
 
 print()
 print("-------------------- Initializing Telegram Bot --------------------")
 # Start Clients
-Bot.start()
+
+tg_app = Bot()
+tg_app.start()
 
 print("------------------------------------------------------------------")
 print()
