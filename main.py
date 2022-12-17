@@ -156,8 +156,8 @@ async def message_handler(event):
 
             newbutton = [Button.url('Click To Check Spelling ✅',
                                     f'http://www.google.com/search?q={event.text.replace(" ", "%20")}%20Movie')], [
-                            Button.url('How To Watch',
-                                    f'https://t.me/bollywoodmoviereqwatch')]
+                            Button.url('Request Admin ',
+                                    f'https://t.me/potter_help_bot')]
             await txt.delete()
             result = await event.reply(answer, buttons=newbutton, link_preview=False)
             await asyncio.sleep(Config.AUTO_DELETE_TIME)
@@ -179,7 +179,7 @@ async def message_handler(event):
         message = f'**Click Here 👇 For "{event.text}"**\n\n[🍿🎬 {str(event.text).upper()}\n🍿🎬 {str("Click me for results").upper()}]({tgraph_result})'
 
         newbutton = [Button.url('Join Updates Channel ✅',
-                                    f'https://t.me/movieshubchannell')]
+                                    f'https://t.me/Potterhub')]
 
         await txt.delete()
         await asyncio.sleep(0.5)
